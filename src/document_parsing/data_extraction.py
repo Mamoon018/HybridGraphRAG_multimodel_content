@@ -147,6 +147,13 @@ class MinerU_Parser():
 
             **Raises:**
 
+            ## Content of Atomic Units ##
+            1- Page_no.: It represent the page number of the document. It starts from 0. 
+            2- Index_on_page: It is associated with the position of the content-element on the given page. Index number starts from 0 for each page.
+               In the Json, it is the number associated with each dictionary (lines: representing Chunk) of the parablocks of given page. We can assign it to chunk present in 
+            3- Raw_content: It is associated with the content of each dictionary (lines) of parablock. 
+
+
             """
             # lets get the input of the function
             minerU_raw_output = self.content_of_json
@@ -172,6 +179,7 @@ class MinerU_Parser():
                 para_blocks = page.get("para_blocks","")
                 for para_dict_details in para_blocks:
                     para_label = para_dict_details.get("type","")
+                    para_index = para_dict_details.get("index","")
                     if para_label not in ["table", "text", "title"]:
                         continue
                     
@@ -180,13 +188,21 @@ class MinerU_Parser():
                         para_lines = para_dict_details.get("lines","")
                         for lines_dict_details in para_lines:
                             spans_details = lines_dict_details.get("spans","")
+
+                            # Multiple spans dict
+                            list_of_spans_content = []
                             for span_dict_details in spans_details:
                                     content_of_span = span_dict_details.get("content","")
                                     content_type_of_span = span_dict_details.get("type","")
                                     if content_type_of_span not in ["text"]:
                                         continue
-                                    knowledge_unit = {"page_no.":page_no, "raw_content":content_of_span, "content_type": para_label}
-                                    content_list.append(knowledge_unit)
+                                    
+                                    # For the cases where we have division for single paragraph, we need to combine the content of its multiple span so, that we
+                                    # can have one complete paragraph in single atomic unit. (Completeness & consistency in the chunks size of Atomic unit)
+                                    list_of_spans_content.append(content_of_span)
+                            content_of_spans = " ".join(list_of_spans_content)
+                            knowledge_unit = {"page_no.":page_no, "index_on_page":para_index , "raw_content":content_of_spans, "content_type": para_label}
+                            content_list.append(knowledge_unit)
 
                     # Knowledge units of tabular content
                     elif para_label == "table":
@@ -205,9 +221,9 @@ class MinerU_Parser():
                                         if content_type_of_span not in  ["table", "text"]:
                                             continue
                                         if content_type_of_span == "table":
-                                            knowledge_unit = {"page_no.":page_no, "table_image_path":ABS_table_image_path, "content_type": para_label}
+                                            knowledge_unit = {"page_no.":page_no, "index_on_page": para_index , "table_image_path":ABS_table_image_path, "content_type": para_label}
                                         if content_type_of_span == "text": 
-                                            knowledge_unit = {"page_no.":page_no, "table_caption":table_caption, "content_type": para_label}
+                                            knowledge_unit = {"page_no.":page_no,  "index_on_page": para_index, "table_caption":table_caption, "content_type": para_label}
 
                                         content_list.append(knowledge_unit)
                     
