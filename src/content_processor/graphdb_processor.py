@@ -5,6 +5,7 @@ from utils import Milvus_client, perplexity_llm
 from src.content_processor.prompt import ENTITIES_GENERATOR_PROMPT
 import os 
 import perplexity
+import re
 
 
 perplexity_api_key = os.getenv("PERPLEXITY_API_KEY")
@@ -34,9 +35,10 @@ class graphdb_processor():
 
         # Get the multi-modal chunks
         milvus_chunks = self.multi_modal_info_extraction_for_KG()
-        KG_entities = self.entities_generation_for_multimodal_chunks(milvus_extracted_data= milvus_chunks)
+        #KG_entities = self.entities_generation_for_multimodal_chunks(milvus_extracted_data= milvus_chunks)
+        parsed_output = self.entities_relationship_parsing()
 
-        return KG_entities
+        return parsed_output
  
 
     def multi_modal_info_extraction_for_KG(self):
@@ -83,8 +85,8 @@ class graphdb_processor():
         4- We will create the relationship of child-nodes with parent nodes.
         5- From the atomic unit content, some 'content keywords'(high level) will also be extracted.
         6- Push the data to the Graph Database for the creation of knowledge Graph.
-        
         """
+
 
         # Compose the Parent entity info 
         content_of_chunk = milvus_extracted_data.get("raw_content",[])
@@ -146,7 +148,69 @@ class graphdb_processor():
         except perplexity.APIStatusError as e:
             print(f"API error: {e.status_code}")
 
+    
 
+    def entities_relationship_parsing(self):
+        """
+        This function takes the text output of the llm which contains the entities, relationships and context keywords
+        for a given chunk - transforms it into the dict structure to make it useful for building the knowledge graph
+        in Neo4j.
+
+        **Args:**
+        llm_entity_relation_output (text): It is the text output where entities, relationships and context keywords are separated by the delimeter.
+
+        **Returns:**
+        entities list[dict]: It is the list of the entities.
+        relationships list[dict]: It is the list of the relationships.
+
+        """
+        llm_entity_relation_output = None
+
+        # lets parse the output
+        with open("LLM_extraction_output.txt","r", encoding= "utf-8") as readLLMOutput:
+            llm_entity_relation_output = readLLMOutput.read()
+
+        # Parse the output to get entities, relationships, chunks context keywords
+        llm_output_sectioned =  [ i.strip() for i in llm_entity_relation_output.split("##") ]
+        
+        # lets define the lists to store the transformed output
+        entities = []
+        relationships = []
+        chunk_context_keywords = []
+        
+        # lets define the regex pattern to check the 
+        pattern_entity = r'\("entity"<\|>"(.*?)"<\|>"(.*?)"<\|>"(.*?)"\)'
+        pattern_relationship = r'\(\s*["\']?relationship["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*\)'
+        context_relationship = r'\(\s*["\']?context\s+keywords["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*\)'
+
+        for record in llm_output_sectioned:
+            entity_match = re.search(pattern=pattern_entity,string= record)
+            relationship_match = re.search(pattern=pattern_relationship,string= record)
+            chunk_context_keyword_match = re.search(pattern=context_relationship, string=record)
+
+            if entity_match:
+                entity_node = {
+                    "entity_name" : entity_match.group(1),
+                    "entity_type" : entity_match.group(2),
+                    "entity_description" : entity_match.group(3)
+                }
+                entities.append(entity_node) 
+            elif relationship_match:
+                relationship_edges = {
+                    "source": relationship_match.group(1),
+                    "target": relationship_match.group(2),
+                    "description": relationship_match.group(3),
+                    "keywords": relationship_match.group(4),
+                    "category": relationship_match.group(5)
+                }
+                relationships.append(relationship_edges)
+            elif chunk_context_keyword_match:
+                context_keywords = {
+                    "Keywords": chunk_context_keyword_match.group(1),
+                }
+                chunk_context_keywords.append(context_keywords)
+
+        return chunk_context_keywords 
 
 
 
