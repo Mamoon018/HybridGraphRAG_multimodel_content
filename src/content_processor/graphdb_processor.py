@@ -2,6 +2,7 @@
 
 from src.document_parsing.sample_data import sample_textual_vectorized_payload_insertion_list, sample_multi_modal_vectorized_payload_insertion_list, Milvus_extracted_multimodal_chunks
 from utils import Milvus_client, perplexity_llm
+from src.document_parsing.sample_data import Parent_entity_info
 from src.content_processor.prompt import ENTITIES_GENERATOR_PROMPT
 import os 
 import perplexity
@@ -35,10 +36,13 @@ class graphdb_processor():
 
         # Get the multi-modal chunks
         milvus_chunks = self.multi_modal_info_extraction_for_KG()
-        #KG_entities = self.entities_generation_for_multimodal_chunks(milvus_extracted_data= milvus_chunks)
-        parsed_output = self.entities_relationship_parsing()
+        #KG_entities, parent_entity_info = self.entities_generation_for_multimodal_chunks(milvus_extracted_data= milvus_chunks)
+        entities, relationships, chunk_context_keywords = self.entities_relationship_parsing()
 
-        return parsed_output
+        #KG_builder_confirmation = self.KG_builder(entity_nodes=entities, relationship_edges=relationships,
+        #                                          parent_entity_nodes=Parent_entity_info)
+
+        return relationships
  
 
     def multi_modal_info_extraction_for_KG(self):
@@ -96,7 +100,7 @@ class graphdb_processor():
             Parent_entity_name = i.get("entity_name",[])
             Parent_entity_type = i.get("entity_type",[])
 
-        entity_info:dict = {
+        parent_entity_info:dict = {
             "parent_entity_name":Parent_entity_name, 
             "parent_entity_type": Parent_entity_type, 
             "content": content_of_chunk
@@ -138,7 +142,7 @@ class graphdb_processor():
             with open("LLM_extraction_output.txt", "w", encoding= "utf-8") as f:
                 f.write(KG_material)
             
-            return KG_material
+            return KG_material, parent_entity_info
 
 
         except perplexity.BadRequestError as e:
@@ -160,28 +164,29 @@ class graphdb_processor():
         llm_entity_relation_output (text): It is the text output where entities, relationships and context keywords are separated by the delimeter.
 
         **Returns:**
-        entities list[dict]: It is the list of the entities.
-        relationships list[dict]: It is the list of the relationships.
+        entities list[dict]: It is the list of the extracted entities.
+        relationships list[dict]: It is the list of the relationships edges that will be used to connect entities with each other.
+        chunk_context_keywords (list): It is the list of the keywords that contains crux of the chunk text. It will keep context around an entity entact with it. 
 
         """
         llm_entity_relation_output = None
 
         # lets parse the output
+
         with open("LLM_extraction_output.txt","r", encoding= "utf-8") as readLLMOutput:
             llm_entity_relation_output = readLLMOutput.read()
 
-        # Parse the output to get entities, relationships, chunks context keywords
         llm_output_sectioned =  [ i.strip() for i in llm_entity_relation_output.split("##") ]
-        
         # lets define the lists to store the transformed output
         entities = []
         relationships = []
-        chunk_context_keywords = []
+        chunk_context_keywords = None
         
         # lets define the regex pattern to check the 
         pattern_entity = r'\("entity"<\|>"(.*?)"<\|>"(.*?)"<\|>"(.*?)"\)'
         pattern_relationship = r'\(\s*["\']?relationship["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*\)'
         context_relationship = r'\(\s*["\']?context\s+keywords["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*\)'
+
 
         for record in llm_output_sectioned:
             entity_match = re.search(pattern=pattern_entity,string= record)
@@ -195,6 +200,10 @@ class graphdb_processor():
                     "entity_description" : entity_match.group(3)
                 }
                 entities.append(entity_node) 
+
+            elif chunk_context_keyword_match:
+                chunk_context_keywords =  chunk_context_keyword_match.group(1) 
+
             elif relationship_match:
                 relationship_edges = {
                     "source": relationship_match.group(1),
@@ -204,13 +213,27 @@ class graphdb_processor():
                     "category": relationship_match.group(5)
                 }
                 relationships.append(relationship_edges)
-            elif chunk_context_keyword_match:
-                context_keywords = {
-                    "Keywords": chunk_context_keyword_match.group(1),
-                }
-                chunk_context_keywords.append(context_keywords)
 
-        return chunk_context_keywords 
+        # Adding context keywords to all the entities - in order to ground them in context of their chunk!
+        for entity_node in entities:
+            entity_node["chunk_context_keywords"] = chunk_context_keywords           
+
+
+        return entities, relationships, chunk_context_keywords
+    
+    def KG_builder(self,entity_nodes, relationship_edges, parent_entity_nodes):
+        """
+        It takes the entity_nodes and relationships_edges as an input and then push the data to the Neo4j to 
+        build the knowledge graph comprised of nodes and relationships. 
+        It also creates the relationship between parent entity (name of content e.g table/image) and child entities which are extracted from the text. 
+
+        **Args:**
+        entity_nodes (list): It is the list of the extracted entities.
+        relationship_edges (list): It is the list of the relationships between the extracted entities. 
+        parent_entity_nodes
+
+        """
+        pass 
 
 
 
