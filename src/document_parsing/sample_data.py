@@ -1,5 +1,14 @@
 
 
+{'entity_type': 'Concept', 'properties': {'entity_name': 'Dataset-level statistics', 
+'entity_description': 'Table-level aggregated metrics describing datasets used in experiments', 
+'chunk_context_keywords': 'dataset statistics, DocBench, MMLongBench, documents, '
+'pages per document, tokens per document, document types, question counts, experimental datasets'}, 
+ 'entity_id': 'Concept_9ff60126-c138-4d34-abd3-2fc8ac909e01'}
+
+
+
+
                         ####   Sample Data Objects    ####  # Remove keyword Array and shape from vectors list to make it compatible with file.
 Parent_entity_info = {"entity_name" : "DocBench & MMLongBench evaluation", "entity_type": "table"}
 

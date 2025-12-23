@@ -4,6 +4,7 @@ from src.document_parsing.sample_data import sample_textual_vectorized_payload_i
 from utils import Milvus_client, perplexity_llm
 from src.document_parsing.sample_data import Parent_entity_info
 from src.content_processor.prompt import ENTITIES_GENERATOR_PROMPT
+from utils import doc_id
 import os 
 import perplexity
 import re
@@ -39,10 +40,10 @@ class graphdb_processor():
         #KG_entities, parent_entity_info = self.entities_generation_for_multimodal_chunks(milvus_extracted_data= milvus_chunks)
         entities, relationships, chunk_context_keywords = self.entities_relationship_parsing()
 
-        #KG_builder_confirmation = self.KG_builder(entity_nodes=entities, relationship_edges=relationships,
-        #                                          parent_entity_nodes=Parent_entity_info)
+        entities_with_id,relationships_with_id = self.parent_child_relationships(entity_nodes=entities, relationship_edges=relationships,
+                                                  parent_entity_node=Parent_entity_info)
 
-        return entities
+        return relationships_with_id
  
 
     def multi_modal_info_extraction_for_KG(self):
@@ -222,38 +223,78 @@ class graphdb_processor():
 
         # Adding context keywords to all the entities - in order to ground them in context of their chunk!
         for entity_node in entities:
-                entity_node["properties"]["chunk_context_keywords"] = chunk_context_keywords     
+                entity_node["properties"]["chunk_context_keywords"] = chunk_context_keywords
+
+        
 
         return entities, relationships, chunk_context_keywords
 
-
-    # Defining function for the creation of the knowledg graph
-    def KG_builder(self,entity_nodes, relationship_edges, parent_entity_nodes):
+    
+    # ID assigner for entities, relationships so, we can store them in KG with unique IDs
+    def _id_generator(self,name):
+        """Generate ID for an object"""
+        document_id = doc_id()
+        return f"{name}_{document_id}"
+    
+    # Parent_child node relationship generator 
+    def _relationship_generator(self,entity, parent_entity):
         """
-        It takes the entity_nodes and relationships_edges as an input and then push the data to the Neo4j to 
-        build the knowledge graph comprised of nodes and relationships. 
-        It also creates the relationship between parent entity (name of content e.g table/image) and child entities which are extracted from the text. 
+        It creates the relationships between the entities and add them into relationships object. Mainly
+        this will be used for creating relationships between parent and child nodes.
+        """
 
-        TASKS TO BE DONE:
-        1- Bring entity object in the format: Entity ID, Entity Label, Properties (IN PARSING FUNCTION)
-        2- Bring relationship object in the format: Entity ID, Entity Label, Properties (IN PARSING FUNCTION)
-        3- Write a loop that can create cypher query for all entities, and create relationships among them 
-        4- 
+        child_entity = entity["properties"]["entity_name"]
+        parent_entity = parent_entity["entity_name"]
 
 
+        relationship_edge = {
+                    "source": entity["properties"]["entity_name"],
+                    "target": child_entity,
+                    "properties": {
+                                    "description": f"{child_entity} is child-entity that belongs to parent-entity {parent_entity}",
+                                    "keywords": entity["properties"]["chunk_context_keywords"], 
+                                    "category": "Main-theme"
+                                    }
+                            }
+        
+        # Add to relationship_edges 
+        return relationship_edge
+
+
+    # Define function for the adding IDs into extracted entities and relationships
+    def parent_child_relationships(self,entity_nodes, relationship_edges, parent_entity_node):
+        """
+        1- It assigns IDs to entity_nodes and relationship_edges. 
+        2- It takes the entity_nodes and create belongs to relationships with parent entity_node & add it to the relationship_edges.
 
         **Args:**
         entity_nodes (list): It is the list of the extracted entities.
         relationship_edges (list): It is the list of the relationships between the extracted entities. 
-        parent_entity_nodes: It is the object that contains the details of parent entity which will be linked with all extracted entities.
-
+        parent_entity_node (dict): It is the details of the parent entity from which all entities & relationships have been extracted.
+        
+        
         """
 
+        # Generate ID for entities
+        for entity in entity_nodes:
+            entity["entity_id"] = self._id_generator(name="entity")
+        
+
+        # Add relationship between parent and child nodes in relationships
+        for entity in entity_nodes:
+            additional_edge = self._relationship_generator(entity=entity, parent_entity=parent_entity_node)
+            relationship_edges.append(additional_edge)
+
+        # Generate ID for relationships
+        for relationship in relationship_edges:
+            relationship["relaionship_id"] = self._id_generator(name="relationship")
+        
+
+        # Create relationship between parent & child entities and add in relationships edges
+        
 
 
-
-
-        pass 
+        return entity_nodes, relationship_edges
 
 
 

@@ -96,23 +96,23 @@ class Context_Extractor():
         surrounding_pages_units = []
 
 
-        # Previous page & Next page 
+        # Page & Next page 
         previous_page = page_of_current_unit - 1
         next_page = page_of_current_unit + 1
         pages_relvant_for_context = [previous_page,page_of_current_unit,next_page]
-        # Fetch all the chunks from previous page, current page, and next page (In this hierarchical order)
+        # All the chunks from previous page, current page, and next page (In this hierarchical order)
         for page in pages_relvant_for_context:
             for unit in combined_knowledge_units:
                 if unit.get("page_no.") == page:
                     surrounding_pages_units.append(unit)
 
-        # Fetch the index of the current chunk in the list of surrounding chunks
+        # Index of the current chunk in the list of surrounding chunks
         chunk_window = 2
         index_of_current_unit = surrounding_pages_units.index(unit_of_figure)
         start_index = max(0,index_of_current_unit - chunk_window)
         end_index = min(len(surrounding_pages_units), index_of_current_unit + chunk_window + 1)
         
-        # Fetch previous two chunks
+        # Previous two chunks
         range_of_surrounding_chunks = list(range(start_index, end_index))
         list_of_context_chunks = [
             surrounding_pages_units[i] 
@@ -124,7 +124,7 @@ class Context_Extractor():
         Imp Note: For multi-model content context extraction, we do not need to store previous & next chunks separately. It is because
         placement of image does not break the continuity of the text chunks, it just enhances the semantic meaning of it. 
         """
-        # Fetch the content out of chunks
+        # Content out of chunks
         context_chunks_text = []
         for lcc in list_of_context_chunks:
             if "raw_content" in lcc:
@@ -151,13 +151,13 @@ class Context_Extractor():
         """
         
 
-        # Get the input variables  #contextual_text  table_image_path
+        # Input variables  #contextual_text  table_image_path
 
         address_of_content = multi_model_chunks_with_contextual_texts.get("table_image_path","")
         contextual_text = multi_model_chunks_with_contextual_texts.get("contextual_text","")
         table_output_schema = self.table_content_schema
 
-        # lets convert the address in base64 mode
+        # convert the address in base64 mode
         try:
             with open(address_of_content,"rb") as file_path:
                 base_format_address = base64.b64encode(file_path.read()).decode("utf-8")
@@ -172,13 +172,13 @@ class Context_Extractor():
         3- Control creativity
         """
         
-        # Get the prompt for the LLM
+        # prompt for the LLM
         prompt = TABLE_CONTENT_WITH_CONTEXT_PROMPT.format(
             address_of_content = base_format_address,
             contextual_text = contextual_text
         )
 
-        # Initialize the client for perplexity
+        # Initializing the client for perplexity
         client = Perplexity(api_key=perplexity_api_key, 
                             max_retries=1, 
                             )
@@ -214,7 +214,7 @@ class Context_Extractor():
 
             )
 
-            # convert the json into dict to reuse its fields
+            # converting the json into dict to reuse its fields
             llm_structured_output = table_output_schema.model_validate_json(llm_content_description.choices[0].message.content)
             llm_structured_output = llm_structured_output.model_dump()
             table_description = llm_structured_output.get("content_description","")

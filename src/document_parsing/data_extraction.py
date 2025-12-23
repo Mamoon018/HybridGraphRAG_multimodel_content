@@ -22,7 +22,7 @@ Class MinerU_Parser:
 
 """
 
-# Lets create the MinerU Parser class 
+# Create the MinerU Parser class 
 
 class MinerU_Parser():
     """
@@ -44,8 +44,7 @@ class MinerU_Parser():
         self.minerU_content_list = None
         
         
-        # Lets run the module with the main function
-
+    # The main function
     def __run_parser__(self):
 
         """
@@ -69,7 +68,7 @@ class MinerU_Parser():
         return knowledge_units_combined
 
 
-    # lets define the Run_minerU method
+    # Define the Run_minerU method
     def run_minerU(self):
         """
         This method takes the data file path as an input, and initiate the subprocess() that executes the external program MinerU
@@ -93,7 +92,7 @@ class MinerU_Parser():
         """
         try:
             
-            # lets define the subprocess for minerU
+            # Define the subprocess for minerU
             data_file_path = self.data_file_path
             subprocess_minerU_output = subprocess.run(
                 ["C:\\Users\\Hp\\AppData\\Local\\Programs\\MinerU\\MinerU.exe", 
@@ -122,7 +121,7 @@ class MinerU_Parser():
                 raise("Subprocess got hanged or blocked indefinitely - here is the timeoutexpired error {e}") 
             
 
-    # Lets create the method to read the output file of the minerU output
+    # Create the method to read the output file of the minerU output
     def read_minerU_output(self):
         """
         It takes the address of the folder where minerU has stored its output and will access json file and markdown file
@@ -157,7 +156,7 @@ class MinerU_Parser():
         md_output_path = (Path(output_dir)).joinpath("full.md")
         
         content_of_json =  json_output_path.read_text(encoding="utf-8")
-        # let's convert this raw text into JSON
+        # Convert this raw text into JSON
         self.content_of_json = json.loads(content_of_json)
         self.content_of_md = md_output_path.read_text(encoding="utf-8")
               
@@ -165,7 +164,7 @@ class MinerU_Parser():
         return self.content_of_json
 
 
-        # Lets create the method to format the output of the minerU & get the knowledge units for Text & Tables
+        # Create the method to format the output of the minerU & get the knowledge units for Text & Tables
     def format_minerU_output(self):
 
             """
@@ -190,7 +189,7 @@ class MinerU_Parser():
 
 
             """
-            # lets get the input of the function
+            # Get the input of the function
             minerU_raw_output = self.content_of_json
             ABS_PATH = Path("C:\\Users\\Hp\\MinerU")
 
@@ -200,14 +199,14 @@ class MinerU_Parser():
             table_images_folder = []
 
 
-            # Let's get the directory path of the output of the minerU so, that we can create the absolute path of the table images. 
+            # Get the directory path of the output of the minerU so, that we can create the absolute path of the table images. 
             for items in ABS_PATH.iterdir():
                 if items.is_dir():
                     table_images_folder.append(items)
             ABS_PATH_OUTPUT = table_images_folder[1]
             
 
-            # Lets get all the knowledge units in the content list
+            # Getting all the knowledge units in the content list
             for page in PDF_INFO:
                 page_no = page.get("page_idx","")
                 discarded_block = page.get("discarded_blocks","")
@@ -265,7 +264,7 @@ class MinerU_Parser():
 
             return self.minerU_content_list
 
-    # Lets create the method to check the installations
+    # Defining the method to check the installations
     def check_minerU_installation(self):
         """
         This method checks the installation of the required tools to run the parser module. 
@@ -284,7 +283,7 @@ class MinerU_Parser():
             }
 
             
-            # let's ensure that while checking, console window on Windows remains hidden
+            # Need to ensure that while checking, console window on Windows remains hidden
             # import platform to check the system
             import platform
             if platform.system == "Windows":

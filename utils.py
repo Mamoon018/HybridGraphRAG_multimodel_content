@@ -125,7 +125,7 @@ def perplexity_llm(api_key, retries):
 
 
 
-## Lets define the openai embedding function
+## Openai embedding function
 def openai_embeddings():
     """
     It instatiate the openaiembedding model to further use it for generating dense vector embeddings for the 
@@ -144,7 +144,7 @@ def openai_embeddings():
 
 
 
-## Lets define the function to count the tokens of the text chunk 
+## Define the function to count the tokens of the text chunk 
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
     """Returns the number of tokens in a text string."""
     encoding = tiktoken.get_encoding(encoding_name)
