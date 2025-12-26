@@ -7,7 +7,7 @@ import tiktoken
 import array
 import os
 from perplexity import Perplexity
-
+from time import perf_counter
 
 milvus_api_key = os.getenv("MILVUS_API_KEY")
 openai_embedding_model_api_key = os.getenv("OPENAI_EMBEDDING_API_KEY")
@@ -150,6 +150,20 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
     encoding = tiktoken.get_encoding(encoding_name)
     num_tokens = len(encoding.encode(string))
     return num_tokens
+
+## Latency measurement
+def starting_time(function_name):
+    return print(f"{function_name} started at time {perf_counter()}")
+
+def ending_time(function_name):
+    return print(f"{function_name} ended at time {perf_counter()}")
+
+
+
+
+
+
+
 
 
 """

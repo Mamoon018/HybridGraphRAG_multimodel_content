@@ -1,58 +1,11 @@
 
 
-"""
-Minima: (When current chunk has index 0)
 
-    Case-1: Index = 0
-    Solution: (Assuming title type exception)
-        (a) Extract two chunks from previous page. (Done)
-        (b) Extract next two chunks from current page (Done)
+[{'entity_type': 'Dataset', 'properties': {'entity_name': 'DocBench', 'entity_description': 'Experimental dataset used in the paper with 229 documents'}, 'entity_id': 'entity_1b8557e3-9296-4139-8253-769b12cea1d9'}, 
+ {'entity_type': 'Dataset', 'properties': {'entity_name': 'MMLongBench', 'entity_description': 'Experimental dataset used in the paper with 135 documents'}, 'entity_id': 'entity_f63ab270-9c2c-43cf-8a46-045843fe562f'}, 
+ {'entity_type': 'Concept', 'properties': {'entity_name': '# Documents', 'entity_description': 'Count of documents in each dataset'}, 'entity_id': 'entity_a7ac02c7-b8ad-4e23-a916-5d6863c32de7'}, 
+ {'entity_type': 'Concept', 'properties': {'entity_name': '# Avg. Pages', 'entity_description': 'Average pages per document'}, 'entity_id': 'entity_12fcb1cd-c04c-4ba7-a868-73fb879c3ebe'}, 
+ {'entity_type': 'Concept', 'properties': {'entity_name': '# Avg. Tokens', 'entity_description': 'Average token count per document'}, 'entity_id': 'entity_4c590448-4561-47e5-a07e-77c9f36ff7df'}, 
+ {'entity_type': 'Concept', 'properties': {'entity_name': '# Doc Types', 'entity_description': 'Number of different document types included'}, 'entity_id': 'entity_2967ba40-014c-4dcf-956d-63cb0577d358'}, 
+ {'entity_type': 'Concept', 'properties': {'entity_name': '# Questions', 'entity_description': 'Total number of questions associated with the dataset'}, 'entity_id': 'entity_49d50bb0-ef89-414b-87f7-21441c7627b2'}]
 
-
-Maxima: (When current chunk has index among top two highest indexes of page such as if higest index is 17. Maxima zone 17.)
-    
-    Case-1: Index = 17
-    Solution: (Assuming title type exception
-        (a) Extract two chunks from next page. (Done)
-        (b) Extract previous two chunks from current page (Done) 
-
-        
-
-        
-Current page Issue:
-
-    Case-1: Index = 1   (NOT HANDLED)
-    Solution: (Assuming title type exception)
-        (a) Extract next two chunks from the current page (Done)
-        (b) Extract previous two chunks from the current page (Done)      (There is only 1 chunk left)
-
-
-Current page Issue:
-    Case-2: Index = 16   (NOT HANDLED)
-    Solution: (Assuming title type exception)
-        (a) Extract next two chunks from the current page (Done)          (There is only 1 chunk left)
-        (b) Extract previous two chunks from the current page (Done)  
-
-        
-Solution questions:
-1- How to find out that previous unit is the last unit of the current page?
-2- If we are able to find then we can associate the "break" with it in order to ensure it does not run loop anymore.
-        
-
-"""
-
-
-                                        ### APPROACH NO. 2 ###
-"""
-
-1- Find out the page of current chunk. Using that, find out previous page and next page.
-2- Access all chunks of current page, extract their index numbers and store in a list in their hierarchical order.
-3- Access all chunks of the next page, and of the previous page. Extract their index numbers and store separately.
-4- Put them together in a single list 
-5- Fetch the next two & previous two chunks of the current chunk from this list.
-    (a) loop over the list to find out the current chunk
-    (b) Findout the index of the current chunk in the list
-    (c) Fetch the previous two chunks - if text or title then add, under title break the loop else add another chunk. 
-    (e) Fetch the next two chunks - if text then add else break the loop.
-
-"""

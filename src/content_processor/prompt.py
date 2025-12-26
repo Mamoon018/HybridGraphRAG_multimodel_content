@@ -78,14 +78,17 @@ You need to strictly follow the following format for structuring the relationshi
 ("relationship"<|>"Dual-level retrieval"<|>"Vector search"<|>"Combines this technique with graph traversal"<|>"methodology, hybrid-search"<|>"Main-theme")
 ("relationship"<|>"LightRAG"<|>"Redis"<|>"Optionally supports this tool for session caching"<|>"caching, optimization"<|>"Supporting-theme")
 
-Step-3: Identify the contextual keywords from the text
---- Guidence for extraction of contextual keywords ---
-1. Identify high-level key words that summarize the main concepts, themes, or topics of the entire text. These should 
-capture the overarching ideas present in the document. You only need to compile this once for a chunk.
-Format the content-level key words as given below:
-("context keywords"<|>"high level keywords")
 
-Provide final output as List object that contains entities, relationships, context keywords. Use ## as list delimeter. 
+Provide final output as List object that contains entities, relationships. Use ## as list delimeter. 
 
+
+--- FINAL OUTPUT FORMAT (MUST MATCH EXACTLY) ---
+
+("entity"<|>"LightRAG"<|>"Framework"<|>"A RAG system using graph and vector retrieval")##
+("entity"<|>"Dual-level retrieval"<|>"Concept"<|>"Retrieval strategy using two layers")##
+("entity"<|>"Vector similarity"<|>"Mechanism"<|>"Technique to find semantically similar chunks using DB")##
+
+("relationship"<|>"LightRAG"<|>"Redis"<|>"Optionally supports this tool for session caching"<|>"caching, optimization"<|>"Supporting-theme")##
+("relationship"<|>"Dual-level retrieval"<|>"Vector search"<|>"Combines this technique with graph traversal"<|>"methodology, hybrid-search"<|>"Main-theme")##
 
 """

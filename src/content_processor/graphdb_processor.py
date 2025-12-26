@@ -4,7 +4,7 @@ from src.document_parsing.sample_data import sample_textual_vectorized_payload_i
 from utils import Milvus_client, perplexity_llm
 from src.document_parsing.sample_data import Parent_entity_info
 from src.content_processor.prompt import ENTITIES_GENERATOR_PROMPT
-from utils import doc_id
+from utils import doc_id, starting_time, ending_time
 import os 
 import perplexity
 import re
@@ -37,13 +37,19 @@ class graphdb_processor():
 
         # Get the multi-modal chunks
         milvus_chunks = self.multi_modal_info_extraction_for_KG()
+        print(f"Milvus chunks -->  {milvus_chunks}")
+
         #KG_entities, parent_entity_info = self.entities_generation_for_multimodal_chunks(milvus_extracted_data= milvus_chunks)
-        entities, relationships, chunk_context_keywords = self.entities_relationship_parsing()
+        #print(f"KG_entities --> {KG_entities}")
+
+        entities, relationships = self.entities_relationship_parsing()
+        print(f"Parsed entities --> {entities}")
 
         entities_with_id,relationships_with_id = self.parent_child_relationships(entity_nodes=entities, relationship_edges=relationships,
                                                   parent_entity_node=Parent_entity_info)
+        print(f" -- entities and relationships with IDs -- {entities_with_id}, {relationships_with_id}")
 
-        return relationships_with_id
+        return relationships_with_id, entities_with_id
  
 
     def multi_modal_info_extraction_for_KG(self):
@@ -206,28 +212,19 @@ class graphdb_processor():
         # Define the lists to store the transformed output
         entities = []
         relationships = []
-        chunk_context_keywords = None
         
         # Define the regex pattern to check the 
         pattern_entity = re.compile('\("entity"<\|>"(.*?)"<\|>"(.*?)"<\|>"(.*?)"\)')
         pattern_relationship = re.compile('\(\s*["\']?relationship["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*\)')
-        pattern_chunk_keywords = re.compile('\(\s*["\']?context\s+keywords["\']?\s*<\|>\s*["\']?(.*?)["\']?\s*\)')
 
         for record in llm_output_sectioned:
             if entity_match:= pattern_entity.search(record):
                 entities.append(self._parse_entities(match=entity_match)) 
-            elif chunk_keywords_match:= pattern_chunk_keywords.search(record):
-                chunk_context_keywords =  chunk_keywords_match.group(1)
             elif relationship_match:= pattern_relationship.search(record):
                 relationships.append(self._parse_relationships(match=relationship_match))
-
-        # Adding context keywords to all the entities - in order to ground them in context of their chunk!
-        for entity_node in entities:
-                entity_node["properties"]["chunk_context_keywords"] = chunk_context_keywords
-
         
 
-        return entities, relationships, chunk_context_keywords
+        return entities, relationships
 
     
     # ID assigner for entities, relationships so, we can store them in KG with unique IDs
@@ -244,15 +241,14 @@ class graphdb_processor():
         """
 
         child_entity = entity["properties"]["entity_name"]
-        parent_entity = parent_entity["entity_name"]
+        parent_entity = parent_entity["parent_entity_name"]
 
 
         relationship_edge = {
                     "source": entity["properties"]["entity_name"],
                     "target": child_entity,
                     "properties": {
-                                    "description": f"{child_entity} is child-entity that belongs to parent-entity {parent_entity}",
-                                    "keywords": entity["properties"]["chunk_context_keywords"], 
+                                    "description": f"{child_entity} is child-entity that belongs to parent-entity {parent_entity}", 
                                     "category": "Main-theme"
                                     }
                             }
@@ -272,29 +268,23 @@ class graphdb_processor():
         relationship_edges (list): It is the list of the relationships between the extracted entities. 
         parent_entity_node (dict): It is the details of the parent entity from which all entities & relationships have been extracted.
         
-        
         """
 
         # Generate ID for entities
         for entity in entity_nodes:
             entity["entity_id"] = self._id_generator(name="entity")
         
-
         # Add relationship between parent and child nodes in relationships
         for entity in entity_nodes:
-            additional_edge = self._relationship_generator(entity=entity, parent_entity=parent_entity_node)
+            additional_edge = self._relationship_generator(entity=entity, parent_entity=Parent_entity_info)
             relationship_edges.append(additional_edge)
 
         # Generate ID for relationships
         for relationship in relationship_edges:
             relationship["relaionship_id"] = self._id_generator(name="relationship")
         
-
-        # Create relationship between parent & child entities and add in relationships edges
-        
-
-
         return entity_nodes, relationship_edges
+
 
 
 
@@ -307,9 +297,7 @@ class graphdb_processor():
 graphdb = graphdb_processor(textual_VBD_extracted_chunk=sample_textual_vectorized_payload_insertion_list,
                             multi_modal_VDB_extracted_chunks=sample_multi_modal_vectorized_payload_insertion_list)
 
-output = graphdb.__run_graphdb_processor__()
-
-print(output)
+graphdb.__run_graphdb_processor__()
 
 
 
