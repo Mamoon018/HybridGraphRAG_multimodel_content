@@ -23,8 +23,8 @@ AI-Companion that assist clinicians in diagnosis contextualization, critical ana
 3) Chunks that contain textual description of multi-modal content were stored in a separate database and textual chunks were stored separately. The reason behind this was just to ensure that text specifically related to **multi-modal content remains grounded to their main content**. 
 
 ## Compilation of entities & relationships in Neo4j:
-    1) Tested prompt was provided to generate entities and relationships between extracted entities for every chunk separately, and got structured output from LLM for further processing. 
-    2) **One parent entity** for every chunk text was created which represents the theme of chunk text, and all the entities discussed in the chunk text were also created as child entities.
-    3) **Belongs_to** relationships between parent and child entities were created.
-    4) **Cypher queries** for the entities and relationships generation were pushed to generate knowledge graphs in Neo4j.
+1) Tested prompt was provided to generate entities and relationships between extracted entities for every chunk separately, and got structured output from LLM for further processing. 
+2) **One parent entity** for every chunk text was created which represents the theme of chunk text, and all the entities discussed in the chunk text were also created as child entities.
+3) **Belongs_to** relationships between parent and child entities were created.
+4) **Cypher queries** for the entities and relationships generation were pushed to generate knowledge graphs in Neo4j.
 5) Knowledge graphs for entities extracted from text chunks and entities extracted from multi-modal text description in chunks were separately generated so that query identification can route the search to content of relevant data type during retrieval. 
