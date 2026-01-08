@@ -2,3 +2,4 @@
 .env
 # Openai configuration with Milvus for Embedding generation function
 milvus.yaml
+LLM_extraction_output.txt

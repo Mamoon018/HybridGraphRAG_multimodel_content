@@ -1,5 +1,10 @@
-# AI Companion for Clinicians 
+# Deep Clinician Assistant
 AI-Companion that assist clinicians in diagnosis contextualization, critical analysis of heterogeneous docs, and reporting automation to improve efficiency.
+
+
+# Framework of Assistant
+![Diagram] (src/Projectdata/Framework.png)
+
 
 ## Key Components of Deep Clinician Assistant ##
 
