@@ -4,7 +4,7 @@
 import subprocess
 from subprocess import CalledProcessError, TimeoutExpired
 from pathlib import Path
-from utils import units_splitter
+from src.utils import units_splitter
 from src.document_parsing.sample_data import combined_knowledge_units
 import json
 

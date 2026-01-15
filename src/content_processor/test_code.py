@@ -14,7 +14,7 @@ Building KG:
 Replicate this for relationships, with different cypher query.
 """
 
-from utils import neo4j_dbconnection, neo4j_uri
+from src.utils import neo4j_dbconnection, neo4j_uri
 
 
 

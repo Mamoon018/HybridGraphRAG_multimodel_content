@@ -1,0 +1,8 @@
+# MinerU tool
+mineru[core]
+# tracker (optional)
+tqdm
+# Graphdb
+neo4j
+# Milvus
+pymilvus

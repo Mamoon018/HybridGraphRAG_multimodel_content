@@ -1,10 +1,9 @@
 
 
 from src.document_parsing.sample_data import sample_textual_vectorized_payload_insertion_list, sample_multi_modal_vectorized_payload_insertion_list, Milvus_extracted_multimodal_chunks
-from utils import Milvus_client, perplexity_llm, neo4j_dbconnection
+from src.utils import Milvus_client, perplexity_llm, neo4j_dbconnection, doc_id, starting_time, ending_time
 from src.document_parsing.sample_data import Parent_entity_info
 from src.content_processor.prompt import ENTITIES_GENERATOR_PROMPT
-from utils import doc_id, starting_time, ending_time
 from pymilvus import MilvusException
 import os 
 import perplexity
@@ -53,9 +52,9 @@ class graphdb_processor():
 
             KG_entity_query, KG_relationship_query  = self.knowledge_graph_query_generator(entity_nodes=entities_with_id,relationship_edges= relationships_with_id)
 
-            final_kg_overview = self.cypher_query_executor(queries_for_entities=KG_entity_query, queries_for_relationships= KG_relationship_query)
+            #final_kg_overview = self.cypher_query_executor(queries_for_entities=KG_entity_query, queries_for_relationships= KG_relationship_query)
 
-            return print(f"Here are the parsed relationships {final_kg_overview}")
+            return print(f"Here are the parsed relationships {KG_entity_query}")
         
         except Exception as e:
             raise(f"error occurred in __run__graphdb_processor__ due to {e}") from e 

@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 import numpy as np 
 from src.document_parsing.sample_data import sample_multi_model_chunks_with_llm_description, sample_textual_knowledge_units
-from utils import doc_id, document_title, Milvus_client, openai_embeddings, num_tokens_from_string
+from src.utils import doc_id, document_title, Milvus_client, openai_embeddings, num_tokens_from_string
 from src.document_parsing.sample_data import list_of_vector_embeddings
 from dataclasses import dataclass
 from pymilvus import DataType
