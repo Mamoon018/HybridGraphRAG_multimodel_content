@@ -2,5 +2,4 @@
 .env
 # Openai configuration with Milvus for Embedding generation function
 milvus.yaml
-src/Projectdata/Framework.png
 src/Projectdata/todolist.txt
